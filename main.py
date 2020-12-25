@@ -1,7 +1,11 @@
 import argparse
+import logging
 import os
 import numpy as np
 from PIL import Image
+
+formatter = '%(levelname)s : %(asctime)s : %(message)s'
+logging.basicConfig(level=logging.DEBUG, format=formatter)
 
 
 class EMSolver():
@@ -46,6 +50,7 @@ class EMSolver():
 
     def m_step(self, stats):
         self.mu = np.array([e/p for e, p in stats])
+        return self.mu
 
 
 def main():
@@ -55,16 +60,17 @@ def main():
     args = parser.parse_args()
 
     solver = EMSolver(args.M, args.sigma)
-    print('loading csv')
+    logging.info('loading csv')
     data = solver.load("datasets/mnist_em.csv")
     delta_mu = np.full(solver.M, np.inf)
+    counter = 0
     while np.any(delta_mu > 0.01):
         mu_old = solver.mu
         stats = solver.e_step(data)
-        solver.m_step(stats)
-        delta_mu = np.sum(np.square(solver.mu - mu_old), axis=1)
-        print(delta_mu)
-    print("finish")
+        mu_new = solver.m_step(stats)
+        delta_mu = np.sum(np.square(mu_new - mu_old), axis=1)
+        logging.debug(f'epoch{counter} {delta_mu}')
+        counter += 1
 
     label = "abcdefghi"
     if solver.M > len(label):
@@ -81,6 +87,8 @@ def main():
         item = item.reshape((28, 28))
         img = Image.fromarray(item, 'L')
         img.save(output_dir + "/mu_" + label[i] + ".png")
+
+    logging.info('finish')
 
 
 if __name__ == "__main__":
