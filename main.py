@@ -69,7 +69,7 @@ def main():
         stats = solver.e_step(data)
         mu_new = solver.m_step(stats)
         delta_mu = np.sum(np.square(mu_new - mu_old), axis=1)
-        logging.debug(f'epoch{counter} {delta_mu}')
+        logging.debug(f'delta_mu epoch{counter} {delta_mu}')
         counter += 1
 
     label = "abcdefghi"
